@@ -8,3 +8,4 @@ UpgradeLog.htm
 *.sln
 *.csproj
 *.bak
+/.idea

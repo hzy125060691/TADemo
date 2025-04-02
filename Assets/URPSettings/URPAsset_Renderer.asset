@@ -70,8 +70,8 @@ MonoBehaviour:
   m_Active: 1
   Parameter:
     RayleighScalarHeight: 8500
-    MieScalarHeight: 1200
-    MieAnisotropy: 0.991
+    MieScalarHeight: 1201
+    MieAnisotropy: 0.99
     PlanetRadius: 6000000
     OzoneCenterHeight: 25000
     OzoneWidth: 15000

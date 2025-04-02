@@ -18,6 +18,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
         private static readonly int _ScatteringST = Shader.PropertyToID("_ScatteringST");
         private static readonly int _TransmittanceLUT = Shader.PropertyToID("_TransmittanceLUT");
         private static readonly int _ScatteringRT = Shader.PropertyToID("_ScatteringRT");
+        private static readonly int _DepthRT = Shader.PropertyToID("_DepthRT");
         private static RenderTextureDescriptor Desc = new RenderTextureDescriptor()
         {
             msaaSamples = 1,
@@ -122,12 +123,11 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            Camera camera = renderingData.cameraData.camera;
             // var cmd = renderingData.commandBuffer;
             CommandBuffer cmd = CommandBufferPool.Get("AtmosphericScattering");
             Boolean exe = false;
             exe |= GenerateTransmittranceLUT(cmd);
-            exe |= Scattering(cmd, camera);
+            exe |= Scattering(cmd, ref renderingData);
             if (exe)
             {
                 Blend(cmd, ref renderingData);
@@ -165,6 +165,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
             {
                 return false;
             }
+            Debug.LogError("GenerateTransmittranceLUT");
             Last.CopyFrom(Param);
             cmd.SetRenderTarget(Param.TransmittanceLUT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare,
                 Param.TransmittanceLUT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
@@ -194,8 +195,9 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
             return true;
         }
 
-        private Boolean Scattering(CommandBuffer cmd, Camera cam)
+        private Boolean Scattering(CommandBuffer cmd, ref RenderingData renderingData)
         {
+            Camera cam = renderingData.cameraData.camera;
             cmd.SetRenderTarget(Param.ScatteringRT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare,
                 Param.ScatteringRT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);
             if (!SystemInfo.usesReversedZBuffer)
@@ -228,6 +230,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
                 new Vector4(
                     Screen.width, Screen.height, 1f / Screen.width, 1f / Screen.height));
             AtmosphericScatteringMaterial.SetTexture(_TransmittanceLUT, Param.TransmittanceLUT);
+            AtmosphericScatteringMaterial.SetTexture(_DepthRT, renderingData.cameraData.renderer.cameraDepthTargetHandle);
             cmd.SetViewMatrix(Matrix4x4.identity);
             //cmd.ClearRenderTarget(RTClearFlags.All, Color.black, 0, 0);
             cmd.DrawMesh(s_TriangleMesh, Matrix4x4.identity, AtmosphericScatteringMaterial, 0, ScatteringPassIdx);
@@ -280,13 +283,13 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
         }
         public Boolean IsEqual(AtmosphereParameter other)
         {
-            return this.RayleighScalarHeight != other.RayleighScalarHeight ||
-                   this.MieScalarHeight != other.MieScalarHeight ||
-                   this.MieAnisotropy != other.MieAnisotropy ||
-                   this.PlanetRadius != other.PlanetRadius ||
-                   this.OzoneCenterHeight != other.OzoneCenterHeight ||
-                   this.OzoneWidth != other.OzoneWidth ||
-                   this.AtmosphereHeight != other.AtmosphereHeight;
+            return this.RayleighScalarHeight == other.RayleighScalarHeight &&
+                   this.MieScalarHeight == other.MieScalarHeight &&
+                   this.MieAnisotropy == other.MieAnisotropy &&
+                   this.PlanetRadius == other.PlanetRadius &&
+                   this.OzoneCenterHeight == other.OzoneCenterHeight &&
+                   this.OzoneWidth == other.OzoneWidth &&
+                   this.AtmosphereHeight == other.AtmosphereHeight;
         }
     };
     [SerializeField]

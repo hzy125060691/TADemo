@@ -26,6 +26,8 @@ Shader "HZY/AtmosphericScattering"
 			#include "include/AtmosphericScattering.hlsl"
 			TEXTURE2D(_TransmittanceLUT);
             SAMPLER(sampler_TransmittanceLUT);
+			TEXTURE2D(_DepthRT);
+            SAMPLER(sampler_DepthRT);
 			CBUFFER_START(UnityPerMaterial)
 				float4 _ScatteringParams;
 				float4 _PlanetParams;
@@ -73,7 +75,19 @@ Shader "HZY/AtmosphericScattering"
 				float3 dir = normalize(es);
 			    //float dist = length(es);
 			    //float dist = DistanceToSphere(startWorldPos.y + params.PlanetRadius, dir, params.PlanetRadius + params.AtmosphereHeight);
+				//float4 depth = SAMPLE_TEXTURE2D(_DepthRT, sampler_DepthRT, i.uv);
+
+				
 				float dist = DistanceToDualSphere(startWorldPos.y + params.PlanetRadius, dir, params.PlanetRadius, params.PlanetRadius + params.AtmosphereHeight);
+				float depth = SAMPLE_DEPTH_TEXTURE(_DepthRT, sampler_DepthRT, i.uv);
+				depth = Linear01DepthFromNear(depth, _ZBufferParams) * 2- 1;
+				if (depth < 1)
+				{
+					float4 depthPos = mul(_ReverseVPMatrix, float4(uv, depth.x, 1));
+					depthPos /= depthPos.w;
+					float maxLength = length(depthPos - startWorldPos);
+					dist = min(dist, maxLength);
+				}
 				const int N_SAMPLES = 32;
 			    float stepLen = dist / N_SAMPLES;
 				float3 step = stepLen * dir;
@@ -83,14 +97,14 @@ Shader "HZY/AtmosphericScattering"
 				float3 color = float3(0, 0, 0);
 				p.y += params.PlanetRadius;
 				[unroll]
-				for (int i = 0; i < N_SAMPLES; i++)
+				for (int ii = 0; ii < N_SAMPLES; ii++)
 				{
 					height = length(p) - params.PlanetRadius;
 					extinction = RayleighScatteringCoefficient(height, params) + MieScatteringCoefficient(height, params) +
 									OzoneAbsorption(height, params) + MieAbsorption(height, params);
-					t1 = 1;//TransmittanceByLUT(p, _LightDir.xyz, params, _TransmittanceLUT, sampler_TransmittanceLUT);
+					t1 = TransmittanceByLUT(p, _LightDir.xyz, params, _TransmittanceLUT, sampler_TransmittanceLUT);
 					s = Scatter(height, _LightDir.xyz, -dir, params);
-					t2 = 1;//exp(-extinction * stepLen);
+					t2 = exp(-extinction * stepLen);
 
 					color += t1 * s * t2 * stepLen * _LightColor;
 					p += step;
@@ -107,6 +121,8 @@ Shader "HZY/AtmosphericScattering"
 				//
 				// // 使用worldPos进行计算...
 				// return float4(worldPos, 1.0); // 示例返回一个颜色，实际应用中根据需要返回不同的值
+				 
+
 				return float4(color, 1);
 			}
 			ENDHLSL

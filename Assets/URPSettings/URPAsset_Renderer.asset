@@ -16,8 +16,8 @@ MonoBehaviour:
     debugReplacementPS: {fileID: 4800000, guid: cf852408f2e174538bcd9b7fda1c5ae7, type: 3}
     hdrDebugViewPS: {fileID: 4800000, guid: 573620ae32aec764abd4d728906d2587, type: 3}
   m_RendererFeatures:
-  - {fileID: 3193941819801188014}
-  m_RendererFeatureMap: aeb683b22929532c
+  - {fileID: 5122494957402020162}
+  m_RendererFeatureMap: 4259ad0b06c21647
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 0}
   shaders:
@@ -49,13 +49,13 @@ MonoBehaviour:
     passOperation: 2
     failOperation: 0
     zFailOperation: 0
-  m_ShadowTransparentReceive: 1
+  m_ShadowTransparentReceive: 0
   m_RenderingMode: 0
   m_DepthPrimingMode: 0
   m_CopyDepthMode: 1
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 1
---- !u!114 &3193941819801188014
+--- !u!114 &5122494957402020162
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -65,6 +65,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c63e7f05d8db1934198fb585f34412e5, type: 3}
-  m_Name: AtmosphericScattering
+  m_Name: AtmosphericScatteringFeature
   m_EditorClassIdentifier: 
   m_Active: 1
+  Parameter:
+    RayleighScalarHeight: 8500
+    MieScalarHeight: 1200
+    MieAnisotropy: 0.991
+    PlanetRadius: 6000000
+    OzoneCenterHeight: 25000
+    OzoneWidth: 15000
+    AtmosphereHeight: 50000
+    TransmittanceLUT: {fileID: 0}
+    ScatteringRT: {fileID: 0}

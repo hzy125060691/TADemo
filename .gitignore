@@ -9,3 +9,6 @@ UpgradeLog.htm
 *.csproj
 *.bak
 /.idea
+/UserSettings
+TADemo.sln.DotSettings.user
+/UserSettings

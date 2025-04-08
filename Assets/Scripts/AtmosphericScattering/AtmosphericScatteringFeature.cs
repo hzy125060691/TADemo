@@ -27,7 +27,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
             depthBufferBits = 0,
             volumeDepth = 1,
             dimension = UnityEngine.Rendering.TextureDimension.Tex2D,
-            graphicsFormat = GraphicsFormatUtility.GetGraphicsFormat(RenderTextureFormat.ARGB32, false),
+            graphicsFormat = GraphicsFormatUtility.GetGraphicsFormat(RenderTextureFormat.RGB111110Float, false),
 
         };
         private AtmosphereParameter Param;
@@ -86,14 +86,22 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
             {
                 Desc.width = 512;
                 Desc.height = 512;
-                Param.TransmittanceLUT = new RenderTexture(Desc);
+                Param.TransmittanceLUT = new RenderTexture(Desc)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                };
                 Param.TransmittanceLUT.name = "TransmittanceLUT";
                 Param.TransmittanceLUT.Create();
             }
             {
                 Desc.width = (Int32)size.x;
                 Desc.height = (Int32)size.y;
-                Param.ScatteringRT = new RenderTexture(Desc);
+                Param.ScatteringRT = new RenderTexture(Desc)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Clamp,
+                };;
                 Param.ScatteringRT.name = "ScatteringRT";
                 Param.ScatteringRT.Create();
                 
@@ -161,11 +169,11 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
         
         private Boolean GenerateTransmittranceLUT(CommandBuffer cmd)
         {
-            if (Last.IsEqual(Param))
-            {
-                return false;
-            }
-            Debug.LogError("GenerateTransmittranceLUT");
+            // if (Last.IsEqual(Param))
+            // {
+            //     return false;
+            // }
+            //Debug.LogError("GenerateTransmittranceLUT");
             Last.CopyFrom(Param);
             cmd.SetRenderTarget(Param.TransmittanceLUT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare,
                 Param.TransmittanceLUT, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.DontCare);

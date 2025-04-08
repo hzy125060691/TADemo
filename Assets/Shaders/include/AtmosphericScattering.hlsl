@@ -170,16 +170,16 @@ inline float2 RemapTransmittanceUV(float height, float cosTheta, float radius0, 
     /// 但是这里不直接除大气层的厚度，先吧海拔转变成路过该点(A)的0海拔球的切线的切点(B)与该点(A)的线段长度，把这个长度进行最大最小值的01映射
     float r0_2 = radius0 * radius0;
     float curH = sqrt(radius * radius - r0_2);
-    float maxH = (radius1 * radius1 - r0_2);
+    float maxH = sqrt(radius1 * radius1 - r0_2);
     
     /// 这里把天顶角COS值映射
-    /// 当前海拔下，该点(A)向所有方向发射线，只取能扫到大气层边缘的部分，北遮挡的部分都抛弃
+    /// 当前海拔下，该点(A)向所有方向发射线，只取能扫到大气层边缘的部分，被遮挡的部分都抛弃
     /// 把最短的线段和最长的线段做线性映射到 01
-    float min = radius1 - radius;
-    float max = curH + maxH;
-    float curDist = DistanceToSphereByCos(radius, cosTheta, radius0);
+    float dMin = radius1 - radius;
+    float dMax = curH + maxH;
+    float curDist = DistanceToSphereByCos(radius, cosTheta, radius1);
     
-    return float2((curDist - min) / (max - min), curH / maxH);
+    return float2((curDist - dMin) / (dMax - dMin), curH / maxH);
 }
 /// UV重新映射到height和cos
 /// 参考RemapTransmittanceUV的逆运算
@@ -226,5 +226,15 @@ inline float3 TransmittanceByLUT(float height, float3 dir, in AtmosphereParamete
     float radius1 = params.PlanetRadius + params.AtmosphereHeight;
     float costTheta = dot(float3(0, 1, 0), dir);
     return SAMPLE_TEXTURE2D(lut, samplerLUT, RemapTransmittanceUV(height, costTheta, params.PlanetRadius, radius1)).rgb;
+}
+
+inline float3 ACESFilm(float3 x)
+{
+    float a = 2.51f;
+    float b = 0.03f;
+    float c = 2.43f;
+    float d = 0.59f;
+    float e = 0.14f;
+    return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
 #endif

@@ -18,6 +18,8 @@ Shader "HZY/AtmosphericScattering"
 			{
 				"LightMode" = "Scattering"
 			}
+			
+			Blend One Zero
 			HLSLPROGRAM
 			#pragma enable_d3d11_debug_symbols
 			#pragma vertex vert
@@ -56,7 +58,6 @@ Shader "HZY/AtmosphericScattering"
 				o.uv = v.uv;
 				return o;
 			}
-
 			half4 frag(v2f i): SV_Target
 			{
 				AtmosphereParameter params = FillAtmosphereParameter(_ScatteringParams, _PlanetParams);
@@ -102,7 +103,7 @@ Shader "HZY/AtmosphericScattering"
 					height = length(p) - params.PlanetRadius;
 					extinction = RayleighScatteringCoefficient(height, params) + MieScatteringCoefficient(height, params) +
 									OzoneAbsorption(height, params) + MieAbsorption(height, params);
-					t1 = TransmittanceByLUT(p, _LightDir.xyz, params, _TransmittanceLUT, sampler_TransmittanceLUT);
+					t1 = TransmittanceByLUT(height, -_LightDir.xyz, params, _TransmittanceLUT, sampler_TransmittanceLUT);
 					s = Scatter(height, _LightDir.xyz, -dir, params);
 					t2 = exp(-extinction * stepLen);
 
@@ -110,20 +111,7 @@ Shader "HZY/AtmosphericScattering"
 					p += step;
 			
 				}
-				// // 从屏幕空间到视图空间的转换（可选，取决于具体需求）
-				// float depth = tex2D(_CameraDepthTexture, i.uv).r; // 获取深度值
-				// float4 viewPos = float4(i.screenPos.xyz, depth); // 构建视图空间位置
-				// viewPos = mul(UNITY_MATRIX_I_VP, viewPos); // 从屏幕空间到视图空间
-				//
-				// // 从视图空间到世界空间
-				// float3 worldPos = mul(unity_WorldToObject, viewPos).xyz; // 从视图空间转换回世界空间（注意这里是反向矩阵）
-				// worldPos = mul(unity_ObjectToWorld, float4(worldPos, 1.0)).xyz; // 如果需要，再次转换回正确的世界空间（通常不必要）
-				//
-				// // 使用worldPos进行计算...
-				// return float4(worldPos, 1.0); // 示例返回一个颜色，实际应用中根据需要返回不同的值
-				 
-
-				return float4(color, 1);
+				return float4((color), 1);
 			}
 			ENDHLSL
 		}

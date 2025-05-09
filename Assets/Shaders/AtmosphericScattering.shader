@@ -28,6 +28,8 @@ Shader "HZY/AtmosphericScattering"
 			#include "include/AtmosphericScattering.hlsl"
 			TEXTURE2D(_TransmittanceLUT);
             SAMPLER(sampler_TransmittanceLUT);
+			TEXTURE2D(_SceneRT);
+            SAMPLER(sampler_SceneRT);
 			TEXTURE2D(_DepthRT);
             SAMPLER(sampler_DepthRT);
 			CBUFFER_START(UnityPerMaterial)
@@ -94,23 +96,31 @@ Shader "HZY/AtmosphericScattering"
 				float3 step = stepLen * dir;
 				float3 p = startWorldPos.xyz + step * 0.5;
 				float height;
-				float3 extinction, t2, t1,s;
+				float3 extinction, t2, t1, s, el;
 				float3 color = float3(0, 0, 0);
 				p.y += params.PlanetRadius;
+				float3 extinctionAll = float3(0, 0, 0);
 				[unroll]
 				for (int ii = 0; ii < N_SAMPLES; ii++)
 				{
 					height = length(p) - params.PlanetRadius;
 					extinction = RayleighScatteringCoefficient(height, params) + MieScatteringCoefficient(height, params) +
 									OzoneAbsorption(height, params) + MieAbsorption(height, params);
+					el = extinction * stepLen;
+					extinctionAll += el;
 					t1 = TransmittanceByLUT(height, -_LightDir.xyz, params, _TransmittanceLUT, sampler_TransmittanceLUT);
 					s = Scatter(height, _LightDir.xyz, -dir, params);
-					t2 = exp(-extinction * stepLen);
+					t2 = exp(-extinctionAll);
 
 					color += t1 * s * t2 * stepLen * _LightColor;
 					p += step;
 			
 				}
+				if (depth < 1)
+				{
+					//color += exp(-extinctionAll) * SAMPLE_TEXTURE2D(_SceneRT, sampler_SceneRT, i.uv).rgb; 
+				}
+				
 				return float4((color), 1);
 			}
 			ENDHLSL

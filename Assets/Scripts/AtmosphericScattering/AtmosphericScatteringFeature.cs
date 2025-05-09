@@ -19,6 +19,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
         private static readonly int _TransmittanceLUT = Shader.PropertyToID("_TransmittanceLUT");
         private static readonly int _ScatteringRT = Shader.PropertyToID("_ScatteringRT");
         private static readonly int _DepthRT = Shader.PropertyToID("_DepthRT");
+        private static readonly int _SceneRT = Shader.PropertyToID("_SceneRT");
         private static RenderTextureDescriptor Desc = new RenderTextureDescriptor()
         {
             msaaSamples = 1,
@@ -239,6 +240,7 @@ public class AtmosphericScatteringFeature : ScriptableRendererFeature
                     Screen.width, Screen.height, 1f / Screen.width, 1f / Screen.height));
             AtmosphericScatteringMaterial.SetTexture(_TransmittanceLUT, Param.TransmittanceLUT);
             AtmosphericScatteringMaterial.SetTexture(_DepthRT, renderingData.cameraData.renderer.cameraDepthTargetHandle);
+            AtmosphericScatteringMaterial.SetTexture(_SceneRT, renderingData.cameraData.renderer.cameraColorTargetHandle);
             cmd.SetViewMatrix(Matrix4x4.identity);
             //cmd.ClearRenderTarget(RTClearFlags.All, Color.black, 0, 0);
             cmd.DrawMesh(s_TriangleMesh, Matrix4x4.identity, AtmosphericScatteringMaterial, 0, ScatteringPassIdx);

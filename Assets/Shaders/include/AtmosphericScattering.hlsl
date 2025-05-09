@@ -166,10 +166,11 @@ inline float3 Transmit(float3 start, float3 end, in AtmosphereParameter params)
 inline float2 RemapTransmittanceUV(float height, float cosTheta, float radius0, float radius1)
 {
     float radius = height + radius0;
+    float r_2 = radius * radius;
     /// 这里把海拔对应的点到大气层形成的球体的表面的最近距离映射到0和最远距离映射到1
     /// 但是这里不直接除大气层的厚度，先吧海拔转变成路过该点(A)的0海拔球的切线的切点(B)与该点(A)的线段长度，把这个长度进行最大最小值的01映射
     float r0_2 = radius0 * radius0;
-    float curH = sqrt(radius * radius - r0_2);
+    float curH = sqrt(r_2 - r0_2);
     float maxH = sqrt(radius1 * radius1 - r0_2);
     
     /// 这里把天顶角COS值映射
@@ -178,7 +179,6 @@ inline float2 RemapTransmittanceUV(float height, float cosTheta, float radius0, 
     float dMin = radius1 - radius;
     float dMax = curH + maxH;
     float curDist = DistanceToSphereByCos(radius, cosTheta, radius1);
-    
     return float2((curDist - dMin) / (dMax - dMin), curH / maxH);
 }
 /// UV重新映射到height和cos
@@ -225,7 +225,8 @@ inline float3 TransmittanceByLUT(float height, float3 dir, in AtmosphereParamete
 {
     float radius1 = params.PlanetRadius + params.AtmosphereHeight;
     float costTheta = dot(float3(0, 1, 0), dir);
-    return SAMPLE_TEXTURE2D(lut, samplerLUT, RemapTransmittanceUV(height, costTheta, params.PlanetRadius, radius1)).rgb;
+    float2 uv = RemapTransmittanceUV(height, costTheta, params.PlanetRadius, radius1);
+    return SAMPLE_TEXTURE2D(lut, samplerLUT, uv).rgb;
 }
 
 inline float3 ACESFilm(float3 x)
